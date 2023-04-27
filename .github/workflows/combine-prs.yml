@@ -177,7 +177,7 @@ jobs:
             console.log('Created combined PR ' + combinedPR['url']);
 
             for(const combinedPRNumber of combinedPRNumbers) {
-              console.log('Closing PR #' + combinedPRNumber);
+              console.log('Closing merged PR #' + combinedPRNumber);
               await github.rest.pulls.update({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
