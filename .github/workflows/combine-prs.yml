@@ -174,10 +174,10 @@ jobs:
               base: baseBranch,
               body: body
             });
-            console.log('Created combined PR ' + combinedPR['url']);
+            console.log('Created combined PR #' + combinedPR['id']);
 
             for(const combinedPRNumber of combinedPRNumbers) {
-              console.log('Closing PR #' + combinedPRNumber);
+              console.log('Closing merged PR #' + combinedPRNumber);
               await github.rest.pulls.update({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
