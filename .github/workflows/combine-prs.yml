@@ -115,7 +115,8 @@ jobs:
                 if (statusOK) {
                   console.log('Adding branch to array: ' + branch);
                   const prString = '#' + pull['number'] + ' ' + pull['title'];
-                  branchesAndPRStrings.push({ branch, prString });
+                  const prNumber = pull['number'];
+                  branchesAndPRStrings.push({ branch, prString, prNumber });
                   baseBranch = pull['base']['ref'];
                   baseBranchSHA = pull['base']['sha'];
                 }
@@ -139,8 +140,9 @@ jobs:
             }
 
             let combinedPRs = [];
+            let combinedPRNumbers = [];
             let mergeFailedPRs = [];
-            for(const { branch, prString } of branchesAndPRStrings) {
+            for(const { branch, prString, prNumber } of branchesAndPRStrings) {
               try {
                 await github.rest.repos.merge({
                   owner: context.repo.owner,
@@ -150,6 +152,7 @@ jobs:
                 });
                 console.log('Merged branch ' + branch);
                 combinedPRs.push(prString);
+                combinedPRNumbers.push(prNumber);
               } catch (error) {
                 console.log('Failed to merge branch ' + branch);
                 mergeFailedPRs.push(prString);
@@ -163,7 +166,7 @@ jobs:
               const mergeFailedPRsString = mergeFailedPRs.join('\n');
               body += '\n\n⚠️ The following PRs were left out due to merge conflicts:\n' + mergeFailedPRsString
             }
-            await github.rest.pulls.create({
+            let combinedPR = await github.rest.pulls.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
               title: 'Combined PR',
@@ -171,3 +174,14 @@ jobs:
               base: baseBranch,
               body: body
             });
+            console.log('Created combined PR ' + combinedPR['url']);
+
+            for(const combinedPRNumber of combinedPRNumbers) {
+              console.log('Closing PR #' + combinedPRNumber);
+              await github.rest.pulls.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: combinedPRNumber,
+                state: 'closed'
+              });
+            }
